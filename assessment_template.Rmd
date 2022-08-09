@@ -1,0 +1,69 @@
+---
+title: "Weekly Assessment of CVP and SWP Delta Operations on ESA-listed Species"
+author: "Bureau of Reclamation"
+date: '2022-08-09'
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lubridate)
+```
+
+# Executive Summary
+
+# Operational and Regulatory Conditions
+
+# Biology, Distribution, and Evaluation of Delta Smelt
+
+## Distribution
+```{r}
+
+```
+
+### Current Distribution
+
+### Cultured Delta Smelt Experimental Releases
+
+### Historical Trends
+
+### Forecasted Distribution within Central Valley and Delta Regions
+
+
+```{r Table 1}
+
+```
+
+```{r Table 2}
+
+```
+
+```{r Table 3}
+
+```
+
+```{r Table 4}
+
+```
+
+```{r Table 5}
+
+```
+
+# Abiotic Conditions
+
+## Turbidity
+
+## X2 Conditions
+
+## Other Environmental Conditions
+
+# Evaluation
+
+# Delta Smelt References
