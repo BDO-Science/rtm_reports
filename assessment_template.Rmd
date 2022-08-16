@@ -20,6 +20,67 @@ library(lubridate)
 
 # Operational and Regulatory Conditions
 
+# Biology, Distribution, and Evaluation Winter-run Chinook salmon, Spring-run Chinook salmon, Central Valley Steelhead
+
+## POPULATION STATUS
+### Winter-run Chinook Salmon
+#### Delta Life Stages
+#### Brood Year 2021 Productivity
+
+### Spring-run Chinook Salmon
+#### Delta Life Stages
+#### Brood Year 2021 Productivity
+
+### Central Valley Steelhead
+#### Delta Life Stages
+#### Brood Year 2021 Productivity
+
+## DISTRIBUTION
+### Winter-run Chinook Salmon
+### Spring-run Chinook Salmon
+### Central Valley Steelhead
+
+
+## EVALUATION
+
+### 1. 
+### 2. 
+
+### 3. What is the likelihood of increased loss exceeding the next annual loss threshold (50%, 75% or 90% of threshold) resulting in OMR management actions based on population distribution, abundance, and behavior of fish in the Delta?
+
+
+**Calculate Loss**
+"SAMTsummary.R"
+
+*Also relevant to Table 2a in Outlook*
+
+
+Read steelhead table, read salmon table
+```{r}
+
+```
+
+
+Produce a Table: 
+
+Species/Race | Unclipped | Clipped
+Winter Run
+Spring Run
+Steelhead Dec-Mar
+Steelhead Apr-Jun
+```{r}
+
+```
+
+
+4. 
+5. 
+
+
+
+
+
+
 # Biology, Distribution, and Evaluation of Delta Smelt
 
 ## Distribution
@@ -56,9 +117,19 @@ library(lubridate)
 
 ```
 
-# Abiotic Conditions
+# ABIOTIC CONDITIONS
 
 ## Turbidity
+Use CDECRetrieve - SensorDownload.R 
+Look at just data from the past week 
+- Water temperature, Flow
+- 3 day averages 
+
+Download Data
+```{r}
+
+```
+
 
 ## X2 Conditions
 
