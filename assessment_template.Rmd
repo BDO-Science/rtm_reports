@@ -14,6 +14,16 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(lubridate)
+library(knitr)
+library(tidyr)
+
+library(readxl)
+library(CDECRetrieve)
+library(flextable)
+```
+
+```{r, echo = FALSE}
+data_folder <- "data_report/"
 ```
 
 # Executive Summary
@@ -23,25 +33,179 @@ library(lubridate)
 # Biology, Distribution, and Evaluation Winter-run Chinook salmon, Spring-run Chinook salmon, Central Valley Steelhead
 
 ## POPULATION STATUS
+
 ### Winter-run Chinook Salmon
 #### Delta Life Stages
 #### Brood Year 2021 Productivity
+
+* Natural Winter-run Chinook salmon: **historical data number and estimate passed RBDD**
+* Hatchery Winter-run Chinook salmon: 
 
 ### Spring-run Chinook Salmon
 #### Delta Life Stages
 #### Brood Year 2021 Productivity
 
+* Natural Spring-run Chinook salmon: **historical data number**
+* Hatchery Spring-run Chinook salmon: 
+* Hatchery Spring-run Chinook salmon surrogates associated with the ITP
+* San Joaquin River Restoration Program (SJRRP) Salmon Conservation and Research Facility (SCARP) Chinook salmon: 
+
 ### Central Valley Steelhead
 #### Delta Life Stages
 #### Brood Year 2021 Productivity
+
+* Spawner abundance:
+* Natural steelhead:
+* Hatchery steelhead:
 
 ## DISTRIBUTION
 ### Winter-run Chinook Salmon
+#### Current Distribution
+
+* **info on percentage in Delta, exited Delta** 
+* **info on natural loss**
+* **info on hatchery loss**
+* **info on flows at Mill and Deer creek**
+
+#### Historic Trends
+
+* **percent of winter-run Chinook salmon that should have been observed in salvage by this time of the water year (Table 3)**
+
+
+#### Forecasted Distribution within Central Valley and Delta regions
+
+* **info on entrainment tool estimates of median and maximum loss**
+* **Genetic information from salvage**
+
+
+
+
+
 ### Spring-run Chinook Salmon
+#### Current Distribution
+* **percent of CV spring-run present in Delta (Table 1)**
+
+#### Historical Trends
+#### Forecasted Distribution within Central Valley and Delta Regions
+* **percent of YOY spring-run observed in salvage by this time of the water year (Table 3)**
+* **Deer Creek flows**
+
+
+
+
+
 ### Central Valley Steelhead
+#### Current Distribution 
+* **percent present in the Delta (Table 1)**
+* **total hatchery loss**
+* **total natural loss Dec-Mar**
+* **combined natural loss Apr-June**
+
+#### Historical Trends
+* **historical trends percent steelhead in salvage**
+
+#### Forecasted Distribution within Central Valley and Delta regions
+* **percent present in Delta**
+* **entrainment tool estimates (SacPAS)**
+
+
+### TABLES
+
+#### TABLE 1.Salmonid distribution estimates
+https://www.cbr.washington.edu/sacramento/data/juv_monitoring.html
+```{r, echo = FALSE}
+# code for making table here (or pulling table from SacPAS)
+```
+
+#### TABLE 2. Historic migration and salvage patterns
+```{r}
+
+```
+
+#### TABLE 3. STARS model output
+```{r}
+
+```
+
+
+```{r CDECflows, echo = FALSE}
+# Define parameters ----------------------------------
+stations <-  c("MLM", "DCV", "WLK")
+sta <- stations
+start <- today() - 8
+end <- today()
+sensors <- c("20") # Flow event
+interval <- "E" # Event = every 15 minutes, H = Hourly, A = Annual, D = Daily
+# Download data, bind, write --------------------------------------------
+Flow_data <- lapply(stations,
+                 function(x){
+                   cdec_query(station = x,
+                              sensor_num = sensors,
+                              dur_code = interval,
+                              start_date = start,
+                              end_date = end)
+                 })
+# Combine data and clean data ---------------------------------------------
+Flow_df <- dplyr::bind_rows(Flow_data) %>%
+  mutate(date = date(datetime)) %>%
+  select(date, station = location_id, flow = parameter_value) %>%
+  group_by(station, date) %>%
+  summarize(meanFlow = mean(flow)) %>%
+  ungroup()
+
+Flow_wide <- Flow_df %>%
+  pivot_wider(names_from = "station", values_from = "meanFlow") %>%
+  mutate(MLM_change = (MLM - lag(MLM))/lag(MLM) * 100,
+         DCV_change = (DCV - lag(DCV))/lag(DCV) * 100,
+         WLK_change = (WLK - lag(WLK))/lag(WLK) * 100) %>%
+  na.omit() %>%
+  mutate(across(.cols = DCV:WLK_change, .fns = ~ round(.x, digits = 1))) %>%
+  mutate(MLM_alert = "Flow>95cfs",
+         DCV_alert = "Flow>95cfs") %>%
+  select(MLM_flow = MLM, MLM_change, MLM_alert, 
+         DCV_flow = DCV, DCV_change, DCV_alert,
+         WLK_flow = WLK, WLK_change)
+```
+
+```{r, echo = FALSE}
+flextable(Flow_wide) %>%
+            set_caption("TABLE 4. Mean daily flow and percent change (Wilkins Slough, Deer Creek, Mill Creek; cfs from CDEC) and temperature and percent change (Knights Landing; °F from RST)") %>%
+  vline()
+```
+
+
+#### TABLE 5. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. b) Environmental details, current and forecast.
+
+```{r}
+
+```
+
+#### TABLE 6. Preliminary survival (Φ) results for acoustically tagged salmonids (Chinook and steelhead). Individual studies denoted by rows with bold lines.
+```{r}
+
+```
+
+
+### FIGURES
+
+#### FIGURE 1.
+
+#### FIGURE 2.
+
+#### FIGURE 3.Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
+
+```{r, echo = FALSE}
+url <- "https://www.cbr.washington.edu/sacramento/data/graphics/juvloss_2_NONE.png"
+```
+
+![](`r url`)
+
 
 
 ## EVALUATION
+
+
+
 
 ### 1. 
 ### 2. 
@@ -50,40 +214,76 @@ library(lubridate)
 
 
 **Calculate Loss**
-"SAMTsummary.R"
+
 
 *Also relevant to Table 2a in Outlook*
 
+```{r, echo = FALSE}
+# Read steelhead and salmon data
 
-Read steelhead table, read salmon table
-```{r}
+library(readr)
+salmon_file = list.files(data_folder, pattern = "Salmon_2022_*", full.names = TRUE)
+salmon_loss_data <- purrr::map(salmon_file, ~ read_csv(.x, col_types = cols(SampleDate = col_date(format = "%m/%d/%Y")))) %>%
+  bind_rows()
 
+steelhead_file = list.files(data_folder, pattern = "Steelhead_Salvage_Summary_2022_rawdata_*", full.names = TRUE)
+steelhead_loss_data <- purrr::map(steelhead_file, ~ read_csv(.x, col_types = cols(Date = col_date(format = "%m/%d/%Y")))) %>%
+  bind_rows() %>%
+  mutate(month = month(Date),
+         category = ifelse(month<4 | month>=8, "SH-early", "SH-late"))
 ```
 
+```{r, echo = FALSE}
+SH.loss <- steelhead_loss_data %>% 
+  group_by(category) %>%
+  summarise(loss_SWPN = sum(Loss_SWPN,na.rm = TRUE),
+            loss_SWPC = sum(Loss_SWPC, na.rm = TRUE),
+            loss_CVPN = sum(Loss_CVPN,na.rm = TRUE),
+            loss_CVPC = sum(Loss_CVPC,na.rm = TRUE)) %>% 
+  mutate(loss_natural= loss_SWPN + loss_CVPN,
+         loss_clipped = loss_SWPC + loss_CVPC)
 
-Produce a Table: 
+SH.loss.sub <- SH.loss %>%
+  dplyr::select(species_race = category, 
+         loss_unclipped = loss_natural,
+         loss_clipped)
 
-Species/Race | Unclipped | Clipped
-Winter Run
-Spring Run
-Steelhead Dec-Mar
-Steelhead Apr-Jun
-```{r}
+salmon.loss.all <- salmon_loss_data %>%  group_by(ADCLIP, `Size Race`) %>% summarise(loss_total = sum(LOSS))
 
+salmon.loss.sub <- salmon.loss.all %>%
+  pivot_wider(names_from = "ADCLIP", values_from = "loss_total") %>%
+  rename(loss_unclipped =N,
+         loss_clipped = C,
+         species_race = `Size Race`)
+
+loss <- rbind(SH.loss.sub, salmon.loss.sub)
+```
+
+```{r, echo = FALSE}
+library(flextable)
+flextable(loss) %>% 
+  vline() %>%
+  border_outer()
 ```
 
 
 4. 
 5. 
 
+# Biology, Distribution, and Evaluation of Green Sturgeon
+## POPULATION STATUS
+## DISTRIBUTION
+## EVALUATION
+```{r}
 
+```
 
 
 
 
 # Biology, Distribution, and Evaluation of Delta Smelt
 
-## Distribution
+## DISTRIBUTION
 ```{r}
 
 ```
