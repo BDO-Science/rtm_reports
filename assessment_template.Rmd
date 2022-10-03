@@ -1,7 +1,7 @@
 ---
 title: "Weekly Assessment of CVP and SWP Delta Operations on ESA-listed Species"
 author: "Bureau of Reclamation"
-date: '2022-08-09'
+date: "`r format(Sys.time(), '%B %d, %Y')`"
 output: word_document
 ---
 
@@ -25,6 +25,9 @@ library(flextable)
 ```{r, echo = FALSE}
 data_folder <- "data_report/"
 ```
+
+
+
 
 # Executive Summary
 
@@ -113,21 +116,40 @@ data_folder <- "data_report/"
 
 #### TABLE 1.Salmonid distribution estimates
 https://www.cbr.washington.edu/sacramento/data/juv_monitoring.html
-```{r, echo = FALSE}
-# code for making table here (or pulling table from SacPAS)
+```{r}
+# Not sure where this data comes from 
 ```
 
 #### TABLE 2. Historic migration and salvage patterns
-```{r}
+```{r, echo = FALSE}
+library(xml2)
+library(rvest)
 
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
+
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_historic <- tables[[7]] %>%
+  dplyr::bind_rows()
+```
+
+```{r, echo = FALSE}
+flextable(table_historic) %>%
+            set_caption("TABLE 2. Historic Migration and Salvage Patterns") %>%
+  vline()%>%
+  hline() %>%
+  border_outer()
 ```
 
 #### TABLE 3. STARS model output
 ```{r}
-
+# Not sure where this data comes from
 ```
 
-
+#### TABLE 4.
 ```{r CDECflows, echo = FALSE}
 # Define parameters ----------------------------------
 stations <-  c("MLM", "DCV", "WLK")
@@ -170,37 +192,40 @@ Flow_wide <- Flow_df %>%
 ```{r, echo = FALSE}
 flextable(Flow_wide) %>%
             set_caption("TABLE 4. Mean daily flow and percent change (Wilkins Slough, Deer Creek, Mill Creek; cfs from CDEC) and temperature and percent change (Knights Landing; °F from RST)") %>%
-  vline()
+  vline()%>%
+  hline() %>%
+  border_outer()
 ```
 
 
 #### TABLE 5. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. b) Environmental details, current and forecast.
 
 ```{r}
-
+# https://www.cbr.washington.edu/sacramento/lossandsalvage/
+# having trouble getting images to load?
 ```
 
 #### TABLE 6. Preliminary survival (Φ) results for acoustically tagged salmonids (Chinook and steelhead). Individual studies denoted by rows with bold lines.
 ```{r}
-
+# not sure where this data comes from
 ```
 
 
 ### FIGURES
 
-#### FIGURE 1.
-
-#### FIGURE 2.
-
-#### FIGURE 3.Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
-
+#### FIGURE 1. WY 2022 cumulative natural winter-run Chinook salmon loss (blue) and 2009 – 2018 historic cumulative loss (gray, different symbols). Historic daily mean plotted in black circles.
 ```{r, echo = FALSE}
+# not sure where this figure is
+```
+
+#### FIGURE 2. Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
+
+This isn't quite the right figure but an example of pulling a figure off the web
+```{r, echo = FALSE, fig.alt = "Non-clipped steelhead loss"}
 url <- "https://www.cbr.washington.edu/sacramento/data/graphics/juvloss_2_NONE.png"
 ```
 
-![](`r url`)
-
-
+!["Non-clipped steelhead loss"](`r url`)
 
 ## EVALUATION
 
@@ -273,10 +298,9 @@ flextable(loss) %>%
 # Biology, Distribution, and Evaluation of Green Sturgeon
 ## POPULATION STATUS
 ## DISTRIBUTION
-## EVALUATION
-```{r}
 
-```
+
+## EVALUATION
 
 
 
@@ -289,6 +313,21 @@ flextable(loss) %>%
 ```
 
 ### Current Distribution
+#### TABLE 7. Summary of recently reported detections of Delta Smelt by Region and Salvage Facilities
+```{r}
+# Could make the mockup of this table to fill out or just let there be cut and paste?
+```
+
+
+#### TABLE 8. Summary of recent Delta Smelt detections reported since last assessment and total detections for the current water year. 
+```{r}
+# Could make the mockup of this table to fill out or just let there be cut and paste?
+```
+
+#### TABLE 9. Weekly summary of the origin of Delta Smelt. These identifications are considered tentative and additional genetic testing will confirm the identity of individuals. Individuals with no tags are provided alive to the FCCL as potential additions to the FCCL Broodstock. *Larval ID still under QA/QC
+```{r}
+# Could make the mockup of this table to fill out or just let there be cut and paste?
+```
 
 ### Cultured Delta Smelt Experimental Releases
 
@@ -297,44 +336,60 @@ flextable(loss) %>%
 ### Forecasted Distribution within Central Valley and Delta Regions
 
 
-```{r Table 1}
-
-```
-
-```{r Table 2}
-
-```
-
-```{r Table 3}
-
-```
-
-```{r Table 4}
-
-```
-
-```{r Table 5}
-
-```
-
 # ABIOTIC CONDITIONS
 
 ## Turbidity
 Use CDECRetrieve - SensorDownload.R 
 Look at just data from the past week 
+
 - Water temperature, Flow
 - 3 day averages 
+- Which stations? OBI turbidity, CLC water temp... others? Are plots from SMT page desired?
 
-Download Data
-```{r}
+### TABLE 10.
+```{r CDECdata, echo = FALSE}
+# Define parameters ----------------------------------
+start <- today() - 7
+end <- today()
 
+# Download data, bind, write --------------------------------------------
+turb_OBI <- cdec_query("OBI", "221", "E", start, end)
+turb_OBI_clean <- turb_OBI %>%
+  dplyr::bind_rows() %>%
+  mutate(date = date(datetime)) %>%
+  select(date, station = location_id, turbidity = parameter_value) %>%
+  group_by(station, date) %>%
+  summarize(meanTurbidity = round(mean(turbidity),2)) %>%
+  ungroup()
+
+temp_CLC <- cdec_query("CLC", "146", "H", start, end)
+temp_CLC_clean <- temp_CLC %>%
+  dplyr::bind_rows() %>%
+  mutate(date = date(datetime)) %>%
+  select(date, station = location_id, watertemp = parameter_value) %>%
+  group_by(station, date) %>%
+  summarize(meanWaterTemp = round(mean(watertemp),2)) %>%
+  ungroup()
 ```
 
+```{r, echo = FALSE}
+flextable(turb_OBI_clean) %>%
+            set_caption("TABLE 10a. Weekly Mean Turbidity (FNU) @ Old River at Bacon Island (OBI)") %>%
+  vline()%>%
+  hline() %>%
+  border_outer()
+
+flextable(turb_OBI_clean) %>%
+            set_caption("TABLE 10b. Weekly Mean Water Temperature (°C) @ Clifton Court Forebay (CLC)") %>%
+  vline() %>%
+  hline() %>%
+  border_outer()
+```
 
 ## X2 Conditions
 
 ## Other Environmental Conditions
 
-# Evaluation
+# EVALUATION
 
-# Delta Smelt References
+# DELTA SMELT REFERENCES
