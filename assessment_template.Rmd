@@ -118,6 +118,7 @@ data_folder <- "data_report/"
 https://www.cbr.washington.edu/sacramento/data/juv_monitoring.html
 ```{r}
 # Not sure where this data comes from 
+# done in real time
 ```
 
 #### TABLE 2. Historic migration and salvage patterns
@@ -146,7 +147,11 @@ flextable(table_historic) %>%
 
 #### TABLE 3. STARS model output
 ```{r}
-# Not sure where this data comes from
+# Not sure where this data comes from - USGS
+https://oceanview.pfeg.noaa.gov/shiny/FED/CalFishTrack/
+  
+  - can change format 
+Download STARS Data
 ```
 
 #### TABLE 4.
@@ -379,7 +384,7 @@ flextable(turb_OBI_clean) %>%
   hline() %>%
   border_outer()
 
-flextable(turb_OBI_clean) %>%
+flextable(temp_CLC_clean) %>%
             set_caption("TABLE 10b. Weekly Mean Water Temperature (°C) @ Clifton Court Forebay (CLC)") %>%
   vline() %>%
   hline() %>%

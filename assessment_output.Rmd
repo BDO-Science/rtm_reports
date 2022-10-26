@@ -1,0 +1,279 @@
+---
+title: "Weekly Assessment of CVP and SWP Delta Operations on ESA-listed Species"
+author: "Bureau of Reclamation"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lubridate)
+library(knitr)
+library(tidyr)
+
+library(readxl)
+library(CDECRetrieve)
+library(flextable)
+```
+
+```{r, echo = FALSE}
+data_folder <- "data_report/"
+```
+## Chinook Salmon
+
+### TABLES
+
+#### TABLE 2. Historic migration and salvage patterns
+```{r, echo = FALSE}
+library(xml2)
+library(rvest)
+
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
+
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_historic <- tables[[8]] %>%
+  dplyr::bind_rows()
+```
+
+```{r, echo = FALSE}
+flextable(table_historic) %>%
+            set_caption("TABLE 2. Historic Migration and Salvage Patterns") %>%
+  vline()%>%
+  hline() %>%
+  border_outer()
+```
+#### TABLE 3. Knight’s Landing (KLCI) and Sacramento Seine and Trawl (SCI).
+```{r}
+table_catchindices <- tables[[5]] %>%
+  dplyr::bind_rows() %>%
+  dplyr::mutate(Date = date(Date)) %>%
+  dplyr::filter(Date > today() -10 & Date != today())
+```
+
+```{r}
+flextable(table_catchindices) %>%
+            set_caption("TABLE 3. Knight’s Landing (KLCI) and Sacramento Seine and Trawl (SCI)") %>%
+  vline()%>%
+  hline() %>%
+  border_outer()
+```
+
+#### TABLE 4.
+
+```{r CDECflows, echo = FALSE}
+# Define parameters ----------------------------------
+stations <-  c("MLM", "DCV", "WLK")
+sta <- stations
+start <- today() - 8
+end <- today()
+sensors <- c("20") # Flow event
+interval <- "E" # Event = every 15 minutes, H = Hourly, A = Annual, D = Daily
+# Download data, bind, write --------------------------------------------
+Flow_data <- lapply(stations,
+                 function(x){
+                   cdec_query(station = x,
+                              sensor_num = sensors,
+                              dur_code = interval,
+                              start_date = start,
+                              end_date = end)
+                 })
+# Combine data and clean data ---------------------------------------------
+Flow_df <- dplyr::bind_rows(Flow_data) %>%
+  mutate(date = date(datetime)) %>%
+  select(date, station = location_id, flow = parameter_value) %>%
+  group_by(station, date) %>%
+  summarize(meanFlow = mean(flow)) %>%
+  ungroup()
+
+Flow_wide <- Flow_df %>%
+  pivot_wider(names_from = "station", values_from = "meanFlow") %>%
+  mutate(`MLM change` = (MLM - lag(MLM))/lag(MLM) * 100,
+         `DCV change` = (DCV - lag(DCV))/lag(DCV) * 100,
+         `WLK change` = (WLK - lag(WLK))/lag(WLK) * 100) %>%
+  na.omit() %>%
+  mutate(across(.cols = DCV:`WLK change`, .fns = ~ round(.x, digits = 1))) %>%
+  mutate(MLM_alert = ifelse(MLM > 95, "Yes", "No"),
+         DCV_alert = ifelse(DCV > 95, "Yes", "No")) %>%
+  select(Date = date,
+         `MLM flow` = MLM, `MLM change`, `MLM alert` = MLM_alert, 
+         `DCV flow` = DCV, `DCV change`, `DCV alert` = DCV_alert,
+         `WLK flow` = WLK, `WLK change`)
+```
+
+```{r, echo = FALSE}
+flextable(Flow_wide) %>%
+            set_caption("TABLE 4. Mean daily flow and percent change (Wilkins Slough, Deer Creek, Mill Creek; cfs from CDEC) and temperature and percent change (Knights Landing; °F from RST)") %>%
+  vline()%>%
+  hline() %>%
+  border_outer()
+```
+#### TABLE 5. STARS model output
+Waiting for SacPAS
+```{r, eval = FALSE, include = FALSE}
+library(RSelenium)
+driver <- rsDriver(browser = "chrome", chromever = "106.0.5249.61")
+
+remote_driver <- driver[["client"]]
+
+remote_driver$navigate("https://oceanview.pfeg.noaa.gov/shiny/FED/CalFishTrack/")
+
+remote_driver$findElement(using = "css selector", "#latefall > li:nth-child(2) > a")$clickElement()
+remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > button.dt-button.buttons-collection")$clickElement()
+remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > div.dt-button-collection > div > button.dt-button.buttons-csv.buttons-html5")$clickElement()
+
+# next table
+remote_driver$findElement(using = "css selector", "#latefall > li:nth-child(2) > a")$clickElement()
+remote_driver$findElement(using = "css selector", "#mainGraph_type > div > label:nth-child(2) > input[type=radio]")$clickElement()
+remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > button.dt-button.buttons-collection > span")$clickElement()
+remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > div.dt-button-collection > div > button.dt-button.buttons-csv.buttons-html5")$clickElement()
+
+# next table
+body > div.wrapper > aside > section > ul > li > ul > div:nth-child(1) > div > div > div.selectize-input.items.has-options.full.has-items.focus.input-active.dropdown-active > div
+
+remote_driver$findElement(using = "css selector", "body > div.wrapper > aside > section > ul > li > ul > div:nth-child(1) > div > div > div.selectize-input.items.has-options.full.has-items > div.winter")$clickElement()
+
+remote_driver$findElement(using = "css selector", "#runtype-winter")$clickElement()
+
+remote_driver$findElement(using = "css selector", "#winter > li.active > a")$clickElement()
+remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > button.dt-button.buttons-collection")$clickElement()
+remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > div.dt-button-collection > div > button.dt-button.buttons-csv.buttons-html5")$clickElement()
+
+
+# Download
+today <- lubridate::today()
+getwd()
+(root <- file.path("../"))
+# Download
+read <- read.csv("C:\\Users\\cpien\\Downloads\\STARS_output_2022_10_11.csv")
+read <- read.csv(paste0("C:\\Users\\cpien\\Downloads\\STARS_output_", today, ".csv"))
+
+read.csv(here::here(paste0("../../../../Downloads/STARS_output_",today,".csv")))
+output <- read.csv("~/Downloads/STARS_output_2022-10-11.csv")
+
+file.path("~/Downloads/STARS_output_2022-10-11.csv")
+```
+
+
+```{r,eval = FALSE, include = FALSE}
+stars_url <-"https://oceanview.pfeg.noaa.gov/shiny/FED/CalFishTrack/"
+page_stars <- read_html(stars_url)
+
+tables_stars <- page_stars %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_historic <- tables[[7]] %>%
+  dplyr::bind_rows()
+```
+
+
+#### TABLE 6. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. b) Environmental details, current and forecast.
+
+Waiting for SacPAS
+```{r, echo = FALSE}
+# https://www.cbr.washington.edu/sacramento/lossandsalvage/
+ses <- session("https://www.cbr.washington.edu/sacramento/lossandsalvage/")
+
+form <- html_form(ses)[[1]]
+
+filledForm <- html_form_set(form,
+                            forecast = "latest",
+                            plotscale = "byweek",
+                            calibration = "loss1")
+
+request <- html_form_submit(filledForm)
+request %>% 
+  read_html() 
+```
+
+### FIGURES
+
+#### FIGURE 1. WY 2023 cumulative natural winter-run Chinook salmon loss (blue) and 2009 – 2018 historic cumulative loss (gray, different symbols). Historic daily mean plotted in black circles.
+```{r, echo = FALSE}
+# not sure if there will be a 2023 version of this. 
+newurl <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2022/LossUnclip_2_December_spaghetti.png"
+  
+#https://www.cbr.washington.edu/sacramento/workgroups/SaMT/WY2022.html
+```
+!["Steelhead loss"](newurl)
+
+#### FIGURE 2. Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
+
+```{r, echo = FALSE, fig.alt = "Non-clipped steelhead loss"}
+url <- "https://www.cbr.washington.edu/sacramento/data/graphics/juvloss_2_NONE.png"
+
+download.file("https://www.cbr.washington.edu/sacramento/tmp/IT.P_1666812866635/steelhead.png", "steelhead.png", mode = "wb")
+
+download.file("https://www.cbr.washington.edu/sacramento/tmp/IT.P_1666812866635/winter.png", "winter.png", mode = "wb")
+
+download.file("https://www.cbr.washington.edu/sacramento/tmp/IT.P_1666816636658/output3.png", "fishdatatable.png", mode = "wb")
+```
+
+!["Winter run (old)"]("https://www.cbr.washington.edu/sacramento/tmp/IT.P_1666812866635/steelhead.png", "steelhead.png")
+
+
+
+
+# Delta Smelt Abiotic Conditions
+
+## Turbidity
+Use CDECRetrieve - SensorDownload.R 
+Look at just data from the past week 
+
+- Water temperature, Flow
+- 3 day averages 
+- Which stations? OBI turbidity, CLC water temp... others? Are plots from SMT page desired?
+
+### TABLE 10.
+
+- NOAA weather service
+- 
+```{r CDECdata, echo = FALSE}
+# Define parameters ----------------------------------
+start <- today() - 7
+end <- today()
+
+# Download data, bind, write --------------------------------------------
+turb_OBI <- cdec_query("OBI", "221", "E", start, end)
+turb_OBI_clean <- turb_OBI %>%
+  dplyr::bind_rows() %>%
+  mutate(date = date(datetime)) %>%
+  select(date, station = location_id, turbidity = parameter_value) %>%
+  group_by(station, date) %>%
+  summarize(meanTurbidity = round(mean(turbidity),2)) %>%
+  ungroup()
+
+temp_CLC <- cdec_query("CLC", "146", "H", start, end)
+temp_CLC_clean <- temp_CLC %>%
+  dplyr::bind_rows() %>%
+  mutate(date = date(datetime)) %>%
+  select(date, station = location_id, watertemp = parameter_value) %>%
+  group_by(station, date) %>%
+  summarize(meanWaterTemp = round(mean(watertemp),2)) %>%
+  ungroup()
+```
+
+```{r, echo = FALSE}
+flextable(turb_OBI_clean) %>%
+            set_caption("TABLE 10a. Weekly Mean Turbidity (FNU) @ Old River at Bacon Island (OBI)") %>%
+  vline()%>%
+  hline() %>%
+  border_outer()
+
+flextable(temp_CLC_clean) %>%
+            set_caption("TABLE 10b. Weekly Mean Water Temperature (°C) @ Clifton Court Forebay (CLC)") %>%
+  vline() %>%
+  hline() %>%
+  border_outer()
+```
+
