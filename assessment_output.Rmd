@@ -57,9 +57,11 @@ flextable(table_historic) %>%
   vline()%>%
   hline() %>%
   border_outer() %>%
-  width(width = 1, unit = "in")
+  width(width = 1, unit = "in") %>%
+  bold(part = "header")
 ```
 
+\newpage
 #### TABLE 3. Knight’s Landing (KLCI) and Sacramento Seine and Trawl (SCI).
 ```{r}
 table_catchindices <- tables[[5]] %>%
@@ -73,12 +75,14 @@ flextable(table_catchindices) %>%
   vline()%>%
   hline() %>%
   border_outer() %>%
-  width(width = c(1.5, 1, 1, 1, 1, 1, 1), unit = "in")
+  width(width = c(1.5, 1, 1, 1, 1, 1, 1), unit = "in")%>%
+  bold(part = "header")
 ```
 
+\newpage
 #### TABLE 4. Mean daily flow and percent change (Wilkins Slough, Deer Creek, Mill Creek; cfs from CDEC) and temperature and percent change (Knights Landing; °F from RST)
 
-```{r CDECflows, echo = FALSE}
+```{r CDECflows, echo = FALSE, include = FALSE, eval = FALSE}
 # Define parameters ----------------------------------
 stations <-  c("MLM", "DCV", "WLK")
 sta <- stations
@@ -119,31 +123,55 @@ Flow_wide <- Flow_df %>%
 ```
 
 ```{r, echo = FALSE}
-flextable(Flow_wide) %>%
-  vline()%>%
-  hline() %>%
-  border_outer()
-```
-#### TABLE 5. STARS model output
-Waiting for SacPAS
-```{r, eval = FALSE, include = FALSE}
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
 
-```
-
-
-```{r,eval = FALSE, include = FALSE}
-stars_url <-"https://oceanview.pfeg.noaa.gov/shiny/FED/CalFishTrack/"
-page_stars <- read_html(stars_url)
-
-tables_stars <- page_stars %>% 
+tables <- page %>% 
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_historic <- tables[[7]] %>%
-  dplyr::bind_rows()
+table_cdec <- tables[[6]] %>%
+  dplyr::bind_rows() %>%
+  rename(`Alert Triggered` = `WLK-KNL: Alert`)
 ```
 
 
+```{r, echo = FALSE}
+flextable(table_cdec) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = c(1, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8))%>%
+  bold(part = "header")
+```
+
+\newpage
+#### TABLE 5. STARS model simulations for route-specific entrainment, travel times, and survival
+
+```{r, echo = FALSE}
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
+
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_stars <- tables[[11]] %>%
+  dplyr::bind_rows()
+```
+
+```{r, echo = FALSE}
+table_stars_w <- tidyr::pivot_wider(table_stars, names_from = "Route", values_from  = "Estimate", id_cols = c("Stock", "Date", "Parameter")) %>%
+  select(Stock, Date, Parameter, `Delta Cross Channel`, `Georgiana Slough`, `Sutter and Steamboat Slough`, `Interior Delta`)
+
+flextable(table_stars_w) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = c(1.4, 1, 0.8, 0.8, 0.8, 0.8, 0.8))%>%
+  bold(part = "header")
+```
+\newpage
 #### TABLE 6. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. 
 
 ```{r, echo = FALSE}
@@ -175,7 +203,8 @@ flextable(table_predictor_w) %>%
   vline()%>%
   hline() %>%
   border_outer() %>%
-  autofit()
+  autofit()%>%
+  bold(part = "header")
   
 ```
 
@@ -199,10 +228,11 @@ flextable(table_env_w) %>%
   vline()%>%
   hline() %>%
   border_outer() %>%
-  autofit()
+  autofit()%>%
+  bold(part = "header")
 
 ```
-
+\newpage
 ### FIGURES
 
 ```{r, echo=FALSE}
