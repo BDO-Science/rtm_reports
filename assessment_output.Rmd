@@ -6,7 +6,7 @@ output: word_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
 ```{r, echo=FALSE}
@@ -20,6 +20,9 @@ library(tidyr)
 library(readxl)
 library(CDECRetrieve)
 library(flextable)
+
+library(xml2)
+library(rvest)
 ```
 
 ```{r, echo = FALSE}
@@ -42,16 +45,21 @@ tables <- page %>%
   html_table(fill = T) 
 
 table_historic <- tables[[8]] %>%
-  dplyr::bind_rows()
+  dplyr::bind_rows() %>%
+  janitor::clean_names(case = "upper_camel")
+
+table_historic <- data.frame(lapply(table_historic, function(x) {gsub("BY", " BY", x)})) 
+table_historic <- data.frame(lapply(table_historic, function(x) {gsub("WY", " WY", x)})) 
 ```
 
 ```{r, echo = FALSE}
 flextable(table_historic) %>%
-            set_caption("TABLE 2. Historic Migration and Salvage Patterns") %>%
   vline()%>%
   hline() %>%
-  border_outer()
+  border_outer() %>%
+  width(width = 1, unit = "in")
 ```
+
 #### TABLE 3. Knight’s Landing (KLCI) and Sacramento Seine and Trawl (SCI).
 ```{r}
 table_catchindices <- tables[[5]] %>%
@@ -62,13 +70,13 @@ table_catchindices <- tables[[5]] %>%
 
 ```{r}
 flextable(table_catchindices) %>%
-            set_caption("TABLE 3. Knight’s Landing (KLCI) and Sacramento Seine and Trawl (SCI)") %>%
   vline()%>%
   hline() %>%
-  border_outer()
+  border_outer() %>%
+  width(width = c(1.5, 1, 1, 1, 1, 1, 1), unit = "in")
 ```
 
-#### TABLE 4.
+#### TABLE 4. Mean daily flow and percent change (Wilkins Slough, Deer Creek, Mill Creek; cfs from CDEC) and temperature and percent change (Knights Landing; °F from RST)
 
 ```{r CDECflows, echo = FALSE}
 # Define parameters ----------------------------------
@@ -112,7 +120,6 @@ Flow_wide <- Flow_df %>%
 
 ```{r, echo = FALSE}
 flextable(Flow_wide) %>%
-            set_caption("TABLE 4. Mean daily flow and percent change (Wilkins Slough, Deer Creek, Mill Creek; cfs from CDEC) and temperature and percent change (Knights Landing; °F from RST)") %>%
   vline()%>%
   hline() %>%
   border_outer()
@@ -120,47 +127,7 @@ flextable(Flow_wide) %>%
 #### TABLE 5. STARS model output
 Waiting for SacPAS
 ```{r, eval = FALSE, include = FALSE}
-library(RSelenium)
-driver <- rsDriver(browser = "chrome", chromever = "106.0.5249.61")
 
-remote_driver <- driver[["client"]]
-
-remote_driver$navigate("https://oceanview.pfeg.noaa.gov/shiny/FED/CalFishTrack/")
-
-remote_driver$findElement(using = "css selector", "#latefall > li:nth-child(2) > a")$clickElement()
-remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > button.dt-button.buttons-collection")$clickElement()
-remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > div.dt-button-collection > div > button.dt-button.buttons-csv.buttons-html5")$clickElement()
-
-# next table
-remote_driver$findElement(using = "css selector", "#latefall > li:nth-child(2) > a")$clickElement()
-remote_driver$findElement(using = "css selector", "#mainGraph_type > div > label:nth-child(2) > input[type=radio]")$clickElement()
-remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > button.dt-button.buttons-collection > span")$clickElement()
-remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > div.dt-button-collection > div > button.dt-button.buttons-csv.buttons-html5")$clickElement()
-
-# next table
-body > div.wrapper > aside > section > ul > li > ul > div:nth-child(1) > div > div > div.selectize-input.items.has-options.full.has-items.focus.input-active.dropdown-active > div
-
-remote_driver$findElement(using = "css selector", "body > div.wrapper > aside > section > ul > li > ul > div:nth-child(1) > div > div > div.selectize-input.items.has-options.full.has-items > div.winter")$clickElement()
-
-remote_driver$findElement(using = "css selector", "#runtype-winter")$clickElement()
-
-remote_driver$findElement(using = "css selector", "#winter > li.active > a")$clickElement()
-remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > button.dt-button.buttons-collection")$clickElement()
-remote_driver$findElement(using = "css selector", "#DataTables_Table_0_wrapper > div.dt-buttons > div.dt-button-collection > div > button.dt-button.buttons-csv.buttons-html5")$clickElement()
-
-
-# Download
-today <- lubridate::today()
-getwd()
-(root <- file.path("../"))
-# Download
-read <- read.csv("C:\\Users\\cpien\\Downloads\\STARS_output_2022_10_11.csv")
-read <- read.csv(paste0("C:\\Users\\cpien\\Downloads\\STARS_output_", today, ".csv"))
-
-read.csv(here::here(paste0("../../../../Downloads/STARS_output_",today,".csv")))
-output <- read.csv("~/Downloads/STARS_output_2022-10-11.csv")
-
-file.path("~/Downloads/STARS_output_2022-10-11.csv")
 ```
 
 
@@ -177,103 +144,75 @@ table_historic <- tables[[7]] %>%
 ```
 
 
-#### TABLE 6. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. b) Environmental details, current and forecast.
+#### TABLE 6. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. 
 
-Waiting for SacPAS
 ```{r, echo = FALSE}
-# https://www.cbr.washington.edu/sacramento/lossandsalvage/
-ses <- session("https://www.cbr.washington.edu/sacramento/lossandsalvage/")
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
 
-form <- html_form(ses)[[1]]
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
 
-filledForm <- html_form_set(form,
-                            forecast = "latest",
-                            plotscale = "byweek",
-                            calibration = "loss1")
+table_environment <- tables[[9]] %>%
+  dplyr::bind_rows()
+table_predictor <- tables[[10]] %>%
+  dplyr::bind_rows()
+```
 
-request <- html_form_submit(filledForm)
-request %>% 
-  read_html() 
+```{r, echo = FALSE}
+table_predictor_w <- table_predictor %>%
+  janitor::clean_names(case = "upper_camel") %>%
+  mutate(Type = ifelse(grepl("Observed", ParameterDescription), "Observed", "Predicted")) %>%
+  filter(Type == "Predicted",
+         !grepl("Low", ParameterToken)) %>%
+  pivot_wider(names_from = "Week", values_from = "Value", id_cols = c("ParameterToken", "ParameterDescription")) %>%
+  select(-ParameterToken) 
+
+colnames(table_predictor_w) <- c("Parameter", "Modeled Current Week", "Modeled Next Week")
+
+flextable(table_predictor_w) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  autofit()
+  
+```
+
+#### TABLE 6. b) Environmental details, current and forecast.
+```{r, echo = FALSE}
+table_env_w <- table_environment %>%
+  janitor::clean_names(case = "upper_camel") %>%
+  pivot_wider(names_from = "WeekType", values_from = "Value", id_cols = c("ParameterToken", "ParameterDescription", "WaterYear")) %>%
+  mutate(Parameter = case_when(ParameterToken == "temp.mal"  ~ "Temperature (Mallard Island, C)",
+                               ParameterToken == "precip" ~ "Precipitation (5-d running sum, inches)",
+                               ParameterToken == "om.sum" ~ "Old and Middle River Flows (cfs)",
+                               ParameterToken == "sac" ~ "Sacramento River Flow (Freeport, cfs)",
+                               ParameterToken == "dcc" ~ "DCC Gates",
+                               ParameterToken == "sjr" ~ "San Joaquin River Flow (Vernalis, cfs)",
+                               ParameterToken == "export" ~ "Export",
+                               TRUE ~ "NA")) %>%
+  filter(Parameter != "NA") %>%
+  select(Parameter, Data, Forecast)
+
+flextable(table_env_w) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  autofit()
+
 ```
 
 ### FIGURES
 
-#### FIGURE 1. WY 2023 cumulative natural winter-run Chinook salmon loss (blue) and 2009 – 2018 historic cumulative loss (gray, different symbols). Historic daily mean plotted in black circles.
-```{r, echo = FALSE}
-# not sure if there will be a 2023 version of this. 
-newurl <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2022/LossUnclip_2_December_spaghetti.png"
-  
-#https://www.cbr.washington.edu/sacramento/workgroups/SaMT/WY2022.html
-```
-!["Steelhead loss"](newurl)
+```{r, echo=FALSE}
+# Define variable containing url
+url_wr <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/samt_lsp_winter.png"
 
-#### FIGURE 2. Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
-
-```{r, echo = FALSE, fig.alt = "Non-clipped steelhead loss"}
-url <- "https://www.cbr.washington.edu/sacramento/data/graphics/juvloss_2_NONE.png"
-
-download.file("https://www.cbr.washington.edu/sacramento/tmp/IT.P_1666812866635/steelhead.png", "steelhead.png", mode = "wb")
-
-download.file("https://www.cbr.washington.edu/sacramento/tmp/IT.P_1666812866635/winter.png", "winter.png", mode = "wb")
-
-download.file("https://www.cbr.washington.edu/sacramento/tmp/IT.P_1666816636658/output3.png", "fishdatatable.png", mode = "wb")
+url_steel <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/samt_lsp_stlhd.png"
 ```
 
-!["Winter run (old)"]("https://www.cbr.washington.edu/sacramento/tmp/IT.P_1666812866635/steelhead.png", "steelhead.png")
+!["Winter Run Loss Plot"](`r url_wr`)
+!["Steelhead Loss Plot"](`r url_steel`)
 
-
-
-
-# Delta Smelt Abiotic Conditions
-
-## Turbidity
-Use CDECRetrieve - SensorDownload.R 
-Look at just data from the past week 
-
-- Water temperature, Flow
-- 3 day averages 
-- Which stations? OBI turbidity, CLC water temp... others? Are plots from SMT page desired?
-
-### TABLE 10.
-
-- NOAA weather service
-- 
-```{r CDECdata, echo = FALSE}
-# Define parameters ----------------------------------
-start <- today() - 7
-end <- today()
-
-# Download data, bind, write --------------------------------------------
-turb_OBI <- cdec_query("OBI", "221", "E", start, end)
-turb_OBI_clean <- turb_OBI %>%
-  dplyr::bind_rows() %>%
-  mutate(date = date(datetime)) %>%
-  select(date, station = location_id, turbidity = parameter_value) %>%
-  group_by(station, date) %>%
-  summarize(meanTurbidity = round(mean(turbidity),2)) %>%
-  ungroup()
-
-temp_CLC <- cdec_query("CLC", "146", "H", start, end)
-temp_CLC_clean <- temp_CLC %>%
-  dplyr::bind_rows() %>%
-  mutate(date = date(datetime)) %>%
-  select(date, station = location_id, watertemp = parameter_value) %>%
-  group_by(station, date) %>%
-  summarize(meanWaterTemp = round(mean(watertemp),2)) %>%
-  ungroup()
-```
-
-```{r, echo = FALSE}
-flextable(turb_OBI_clean) %>%
-            set_caption("TABLE 10a. Weekly Mean Turbidity (FNU) @ Old River at Bacon Island (OBI)") %>%
-  vline()%>%
-  hline() %>%
-  border_outer()
-
-flextable(temp_CLC_clean) %>%
-            set_caption("TABLE 10b. Weekly Mean Water Temperature (°C) @ Clifton Court Forebay (CLC)") %>%
-  vline() %>%
-  hline() %>%
-  border_outer()
-```
-
+#### Figure 1. Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
