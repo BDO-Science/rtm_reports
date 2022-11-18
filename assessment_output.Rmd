@@ -168,7 +168,7 @@ flextable(table_stars_w) %>%
   vline()%>%
   hline() %>%
   border_outer() %>%
-  width(width = c(1.4, 1, 0.8, 0.8, 0.8, 0.8, 0.8))%>%
+  width(width = c(1.2, 0.8, 1, 0.8, 1, 1, 0.8))%>%
   bold(part = "header")
 ```
 \newpage
