@@ -16,11 +16,8 @@ library(tidyr)
 library(lubridate)
 library(knitr)
 library(tidyr)
-
 library(readxl)
-library(CDECRetrieve)
 library(flextable)
-
 library(xml2)
 library(rvest)
 ```
@@ -32,10 +29,9 @@ data_folder <- "data_report/"
 
 ### TABLES
 
-#### TABLE 2. Historic migration and salvage patterns
+#### TABLE 2. Historic migration and salvage patterns.Last updated `r format(Sys.time(), '%m/%d/%Y')`
 ```{r, echo = FALSE}
-library(xml2)
-library(rvest)
+
 
 samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
 page <- read_html(samt_url)
@@ -146,7 +142,7 @@ flextable(table_cdec) %>%
 ```
 
 \newpage
-#### TABLE 5. STARS model simulations for route-specific entrainment, travel times, and survival
+#### TABLE 5. STARS model simulations for route-specific entrainment, travel times, and survival. Travel time is calculated in days.
 
 ```{r, echo = FALSE}
 samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
@@ -157,18 +153,16 @@ tables <- page %>%
   html_table(fill = T) 
 
 table_stars <- tables[[11]] %>%
-  dplyr::bind_rows()
+  dplyr::bind_rows() %>% mutate(Estimate=format(round(Estimate, 2), nsmall = 2))
 ```
 
 ```{r, echo = FALSE}
-table_stars_w <- tidyr::pivot_wider(table_stars, names_from = "Route", values_from  = "Estimate", id_cols = c("Stock", "Date", "Parameter")) %>%
-  select(Stock, Date, Parameter, `Delta Cross Channel`, `Georgiana Slough`, `Sutter and Steamboat Slough`, `Interior Delta`)
+table_stars_w <- tidyr::pivot_wider(table_stars, names_from = "Parameter", values_from  = "Estimate", id_cols = c("Stock", "Date", "Route"))
 
 flextable(table_stars_w) %>%
   vline()%>%
   hline() %>%
   border_outer() %>%
-  width(width = c(1.2, 0.8, 1, 0.8, 1, 1, 0.8))%>%
   bold(part = "header")
 ```
 \newpage
