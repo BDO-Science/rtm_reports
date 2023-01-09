@@ -1,0 +1,224 @@
+---
+title: "Weekly Assessment of CVP and SWP Delta Operations on ESA-listed Species"
+author: "Bureau of Reclamation"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r, echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(lubridate)
+library(knitr)
+library(tidyr)
+library(readxl)
+library(flextable)
+library(xml2)
+library(rvest)
+```
+
+```{r, echo = FALSE}
+data_folder <- "data_report/"
+```
+## Chinook Salmon
+
+### TABLES
+
+#### TABLE 2. Historic migration and salvage patterns.Last updated `r format(Sys.time(), '%m/%d/%Y')`
+```{r, echo = FALSE}
+
+
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
+
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_historic <- tables[[7]] %>%
+  dplyr::bind_rows() %>%
+  janitor::clean_names(case = "upper_camel")
+
+table_historic <- data.frame(lapply(table_historic, function(x) {gsub("BY", " BY", x)})) 
+table_historic <- data.frame(lapply(table_historic, function(x) {gsub("WY", " WY", x)})) 
+```
+
+```{r, echo = FALSE}
+flextable(table_historic) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = 1, unit = "in") %>%
+  bold(part = "header")
+```
+
+\newpage
+#### TABLE 3. Mean daily flow and percent change (Wilkins Slough, Deer Creek, Mill Creek; cfs from CDEC) and temperature and percent change (Knights Landing; °F from RST)
+
+```{r CDECflows, echo = FALSE, include = FALSE, eval = FALSE}
+# Define parameters ----------------------------------
+stations <-  c("MLM", "DCV", "WLK")
+sta <- stations
+start <- today() - 8
+end <- today()
+sensors <- c("20") # Flow event
+interval <- "E" # Event = every 15 minutes, H = Hourly, A = Annual, D = Daily
+# Download data, bind, write --------------------------------------------
+Flow_data <- lapply(stations,
+                 function(x){
+                   cdec_query(station = x,
+                              sensor_num = sensors,
+                              dur_code = interval,
+                              start_date = start,
+                              end_date = end)
+                 })
+# Combine data and clean data ---------------------------------------------
+Flow_df <- dplyr::bind_rows(Flow_data) %>%
+  mutate(date = date(datetime)) %>%
+  select(date, station = location_id, flow = parameter_value) %>%
+  group_by(station, date) %>%
+  summarize(meanFlow = mean(flow)) %>%
+  ungroup()
+
+Flow_wide <- Flow_df %>%
+  pivot_wider(names_from = "station", values_from = "meanFlow") %>%
+  mutate(`MLM change` = (MLM - lag(MLM))/lag(MLM) * 100,
+         `DCV change` = (DCV - lag(DCV))/lag(DCV) * 100,
+         `WLK change` = (WLK - lag(WLK))/lag(WLK) * 100) %>%
+  na.omit() %>%
+  mutate(across(.cols = DCV:`WLK change`, .fns = ~ round(.x, digits = 1))) %>%
+  mutate(MLM_alert = ifelse(MLM > 95, "Yes", "No"),
+         DCV_alert = ifelse(DCV > 95, "Yes", "No")) %>%
+  select(Date = date,
+         `MLM flow` = MLM, `MLM change`, `MLM alert` = MLM_alert, 
+         `DCV flow` = DCV, `DCV change`, `DCV alert` = DCV_alert,
+         `WLK flow` = WLK, `WLK change`)
+```
+
+```{r, echo = FALSE}
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
+
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_cdec <- tables[[5]] %>%
+  dplyr::bind_rows() %>%
+  rename(`Alert Triggered` = `WLK-KNL: Alert`)
+```
+
+
+```{r, echo = FALSE}
+flextable(table_cdec) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  width(width = c(1, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8))%>%
+  bold(part = "header")
+```
+
+\newpage
+#### TABLE 4. STARS model simulations for route-specific entrainment, travel times, and survival. Travel time is calculated in days.
+
+```{r, echo = FALSE}
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
+
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_stars <- tables[[10]] %>%
+  dplyr::bind_rows() %>% mutate(Estimate=format(round(Estimate, 2), nsmall = 2))
+```
+
+```{r, echo = FALSE}
+table_stars_w <- tidyr::pivot_wider(table_stars, names_from = "Parameter", values_from  = "Estimate", id_cols = c("Stock", "Date", "Route"))
+
+flextable(table_stars_w) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  bold(part = "header")
+```
+\newpage
+#### TABLE 5. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. 
+
+```{r, echo = FALSE}
+samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
+page <- read_html(samt_url)
+
+tables <- page %>% 
+  html_nodes("table") %>%
+  html_table(fill = T) 
+
+table_environment <- tables[[8]] %>%
+  dplyr::bind_rows()
+table_predictor <- tables[[9]] %>%
+  dplyr::bind_rows()
+```
+
+```{r, echo = FALSE}
+table_predictor_w <- table_predictor %>%
+  janitor::clean_names(case = "upper_camel") %>%
+  mutate(Type = ifelse(grepl("Observed", ParameterDescription), "Observed", "Predicted")) %>%
+  filter(Type == "Predicted",
+         !grepl("Low", ParameterToken)) %>%
+  pivot_wider(names_from = "Week", values_from = "Value", id_cols = c("ParameterToken", "ParameterDescription")) %>%
+  select(-ParameterToken) 
+
+colnames(table_predictor_w) <- c("Parameter", "Modeled Current Week", "Modeled Next Week")
+
+flextable(table_predictor_w) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  autofit()%>%
+  bold(part = "header")
+  
+```
+
+#### TABLE 5. b) Environmental details, current and forecast.
+```{r, echo = FALSE}
+table_env_w <- table_environment %>%
+  janitor::clean_names(case = "upper_camel") %>%
+  pivot_wider(names_from = "WeekType", values_from = "Value", id_cols = c("ParameterToken", "ParameterDescription", "WaterYear")) %>%
+  mutate(Parameter = case_when(ParameterToken == "temp.mal"  ~ "Temperature (Mallard Island, C)",
+                               ParameterToken == "precip" ~ "Precipitation (5-d running sum, inches)",
+                               ParameterToken == "om.sum" ~ "Old and Middle River Flows (cfs)",
+                               ParameterToken == "sac" ~ "Sacramento River Flow (Freeport, cfs)",
+                               ParameterToken == "dcc" ~ "DCC Gates",
+                               ParameterToken == "sjr" ~ "San Joaquin River Flow (Vernalis, cfs)",
+                               ParameterToken == "export" ~ "Export",
+                               TRUE ~ "NA")) %>%
+  filter(Parameter != "NA") %>%
+  select(Parameter, Data, Forecast)
+
+flextable(table_env_w) %>%
+  vline()%>%
+  hline() %>%
+  border_outer() %>%
+  autofit()%>%
+  bold(part = "header")
+
+```
+\newpage
+### FIGURES
+
+```{r, echo=FALSE}
+# Define variable containing url
+url_wr <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/samt_lsp_winter.png"
+
+url_steel <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/samt_lsp_stlhd.png"
+```
+
+!["Winter Run Loss Plot"](`r url_wr`)
+!["Steelhead Loss Plot"](`r url_steel`)
+
+#### Figure 1. Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
