@@ -20,6 +20,7 @@ library(readxl)
 library(flextable)
 library(xml2)
 library(rvest)
+library(CDECRetrieve)
 ```
 
 ```{r, echo = FALSE}
@@ -152,7 +153,7 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_stars <- tables[[11]] %>%
+table_stars <- tables[[9]] %>%
   dplyr::bind_rows() %>% mutate(Estimate=format(round(Estimate, 2), nsmall = 2))
 ```
 
@@ -166,9 +167,9 @@ flextable(table_stars_w) %>%
   bold(part = "header")
 ```
 \newpage
-#### TABLE 6. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. 
+#### TABLE 6. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. TABLES AREN'T ON SACPAS YET SO THE CODE CHUNK IS TURNED OFF IN THE MARKDOWN CODE.
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, eval = FALSE}
 samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
 page <- read_html(samt_url)
 
@@ -182,7 +183,7 @@ table_predictor <- tables[[10]] %>%
   dplyr::bind_rows()
 ```
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, eval = FALSE}
 table_predictor_w <- table_predictor %>%
   janitor::clean_names(case = "upper_camel") %>%
   mutate(Type = ifelse(grepl("Observed", ParameterDescription), "Observed", "Predicted")) %>%
@@ -202,8 +203,8 @@ flextable(table_predictor_w) %>%
   
 ```
 
-#### TABLE 6. b) Environmental details, current and forecast.
-```{r, echo = FALSE}
+#### TABLE 6. b) Environmental details, current and forecast. TABLES AREN'T ON SACPAS YET SO THE CODE CHUNK IS TURNED OFF IN THE MARKDOWN CODE.
+```{r, echo = FALSE, eval = FALSE}
 table_env_w <- table_environment %>%
   janitor::clean_names(case = "upper_camel") %>%
   pivot_wider(names_from = "WeekType", values_from = "Value", id_cols = c("ParameterToken", "ParameterDescription", "WaterYear")) %>%
