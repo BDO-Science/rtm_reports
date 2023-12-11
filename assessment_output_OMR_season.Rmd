@@ -20,6 +20,7 @@ library(readxl)
 library(flextable)
 library(xml2)
 library(rvest)
+library(CDECRetrieve)
 ```
 
 ```{r, echo = FALSE}
@@ -40,7 +41,7 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_historic <- tables[[7]] %>%
+table_historic <- tables[[8]] %>%
   dplyr::bind_rows() %>%
   janitor::clean_names(case = "upper_camel")
 
@@ -108,7 +109,7 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_cdec <- tables[[5]] %>%
+table_cdec <- tables[[6]] %>%
   dplyr::bind_rows() %>%
   rename(`Alert Triggered` = `WLK-KNL: Alert`)
 ```
@@ -134,7 +135,7 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_stars <- tables[[10]] %>%
+table_stars <- tables[[11]] %>%
   dplyr::bind_rows() %>% mutate(Estimate=format(round(Estimate, 2), nsmall = 2))
 ```
 
@@ -158,9 +159,9 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_environment <- tables[[8]] %>%
+table_environment <- tables[[9]] %>%
   dplyr::bind_rows()
-table_predictor <- tables[[9]] %>%
+table_predictor <- tables[[10]] %>%
   dplyr::bind_rows()
 ```
 
@@ -213,9 +214,9 @@ flextable(table_env_w) %>%
 
 ```{r, echo=FALSE}
 # Define variable containing url
-url_wr <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/samt_lsp_winter.png"
+url_wr <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2024/samt_lsp_winter.png"
 
-url_steel <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/samt_lsp_stlhd.png"
+url_steel <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2024/samt_lsp_stlhd.png"
 
 url_wr_loss_1 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/LossUnclip_1_currhist.png"
 url_wr_loss_2 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/LossUnclip_1_Winter_spaghetti.png"
