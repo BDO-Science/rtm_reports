@@ -218,10 +218,10 @@ url_wr <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY20
 
 url_steel <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2024/samt_lsp_stlhd.png"
 
-url_wr_loss_1 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/LossUnclip_1_currhist.png"
-url_wr_loss_2 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/LossUnclip_1_Winter_spaghetti.png"
+url_wr_loss_1 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2024/LossUnclip_1_currhist.png"
+url_wr_loss_2 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2024/LossUnclip_1_Winter_spaghetti.png"
 
-url_sth_loss_1 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2023/LossUnclip_2_currhist.png"
+url_sth_loss_1 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/WY2024/LossUnclip_2_currhist.png"
 
 ```
 
