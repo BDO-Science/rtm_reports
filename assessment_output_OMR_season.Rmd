@@ -21,6 +21,7 @@ library(flextable)
 library(xml2)
 library(rvest)
 library(CDECRetrieve)
+library(patchwork)
 ```
 
 ```{r, echo = FALSE}
@@ -230,7 +231,7 @@ url_sth_loss_1 <- "https://www.cbr.washington.edu/sacramento/workgroups/include_
 
 #### Figure 1. Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
 
-!["Winter Run Cumulative Loss with Historical Loss Plot"](`r url_wr_loss_1`)
+!["Winter Run Cumulative Loss with Historical Loss Plot"](`r url_wr_loss_1`) +
 !["Winter Run Cumulative Loss with Historical Loss Plot (all WY plotted)"](`r url_wr_loss_2`)
 
 #### Figure 2. Cumulative natural winter-run Chinook salmon loss for the year (blue) and 2009 – 2018 historic cumulative loss (gray, different symbols). Historic daily mean plotted in black circles

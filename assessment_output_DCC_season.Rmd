@@ -41,7 +41,7 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_historic <- tables[[8]] %>%
+table_historic <- tables[[4]] %>%
   dplyr::bind_rows() %>%
   janitor::clean_names(case = "upper_camel")
 
@@ -55,13 +55,16 @@ flextable(table_historic) %>%
   hline() %>%
   border_outer() %>%
   width(width = 1, unit = "in") %>%
-  bold(part = "header")
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
 ```
 
 \newpage
 #### TABLE 3. Knight’s Landing (KLCI) and Sacramento Seine and Trawl (SCI).
 ```{r}
-table_catchindices <- tables[[5]] %>%
+table_catchindices <- tables[[1]] %>%
   dplyr::bind_rows() %>%
   dplyr::mutate(Date = date(Date)) %>%
   dplyr::filter(Date > today() -10 & Date != today())
@@ -72,8 +75,12 @@ flextable(table_catchindices) %>%
   vline()%>%
   hline() %>%
   border_outer() %>%
-  width(width = c(1.5, 1, 1, 1, 1, 1, 1), unit = "in")%>%
-  bold(part = "header")
+  width(width = c(1, 1.1, 1.1, 1.1, 1.1, 1.1, 1.1), unit = "in")%>%
+  height(height = .25, part = 'body', unit = 'in') %>%
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
 ```
 
 \newpage
@@ -127,7 +134,7 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_cdec <- tables[[6]] %>%
+table_cdec <- tables[[2]] %>%
   dplyr::bind_rows() %>%
   rename(`Alert Triggered` = `WLK-KNL: Alert`)
 ```
@@ -139,13 +146,17 @@ flextable(table_cdec) %>%
   hline() %>%
   border_outer() %>%
   width(width = c(1, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8))%>%
-  bold(part = "header")
+  height(height = .33, part = 'body', unit = 'in')%>%
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
 ```
 
 \newpage
 #### TABLE 5. STARS model simulations for route-specific entrainment, travel times, and survival. Travel time is calculated in days.
 
-```{r, echo = FALSE}
+```{r, eval = FALSE, echo = FALSE}
 samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
 page <- read_html(samt_url)
 
@@ -153,11 +164,11 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_stars <- tables[[9]] %>%
+table_stars <- tables[[3]] %>%
   dplyr::bind_rows() %>% mutate(Estimate=format(round(Estimate, 2), nsmall = 2))
 ```
 
-```{r, echo = FALSE}
+```{r, eval = FALSE, echo = FALSE}
 table_stars_w <- tidyr::pivot_wider(table_stars, names_from = "Parameter", values_from  = "Estimate", id_cols = c("Stock", "Date", "Route"))
 
 flextable(table_stars_w) %>%
@@ -177,9 +188,9 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_environment <- tables[[9]] %>%
+table_environment <- tables[[6]] %>%
   dplyr::bind_rows()
-table_predictor <- tables[[10]] %>%
+table_predictor <- tables[[7]] %>%
   dplyr::bind_rows()
 ```
 
@@ -240,4 +251,3 @@ url_steel <- "https://www.cbr.washington.edu/sacramento/workgroups/include_gen/W
 !["Winter Run Loss Plot"](`r url_wr`)
 !["Steelhead Loss Plot"](`r url_steel`)
 
-#### Figure 1. Predicted weekly loss of steelhead and winter-run Chinook salmon at the CVP and SWP facilities
