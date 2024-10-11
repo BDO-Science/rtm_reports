@@ -156,7 +156,7 @@ flextable(table_cdec) %>%
 \newpage
 #### TABLE 5. STARS model simulations for route-specific entrainment, travel times, and survival. Travel time is calculated in days.
 
-```{r, eval = FALSE, echo = FALSE}
+```{r, echo = FALSE}
 samt_url <- "https://www.cbr.washington.edu/sacramento/workgroups/salmon_monitoring.html"
 page <- read_html(samt_url)
 
@@ -164,18 +164,23 @@ tables <- page %>%
   html_nodes("table") %>%
   html_table(fill = T) 
 
-table_stars <- tables[[3]] %>%
+table_stars <- tables[[5]] %>%
   dplyr::bind_rows() %>% mutate(Estimate=format(round(Estimate, 2), nsmall = 2))
 ```
 
-```{r, eval = FALSE, echo = FALSE}
+```{r, echo = FALSE}
 table_stars_w <- tidyr::pivot_wider(table_stars, names_from = "Parameter", values_from  = "Estimate", id_cols = c("Stock", "Date", "Route"))
 
 flextable(table_stars_w) %>%
   vline()%>%
   hline() %>%
   border_outer() %>%
-  bold(part = "header")
+  width(width = c(1.2, 1, 1.4, 0.8, 0.8, 0.8)) %>%
+  height(height = .33, part = 'body', unit = 'in')%>%
+  font(fontname = 'Segoe UI', part = "body") %>%
+  font(fontname = 'Segoe UI Semibold', part = "header") %>%
+  fontsize(size = 12, part = "header") %>%
+  fontsize(size = 10, part = "body")
 ```
 \newpage
 #### TABLE 6. a) WY 2022 loss and salvage predictor data: Predicted weekly loss of winter-run Chinook salmon and steelhead at CVP and SWP facilities. TABLES AREN'T ON SACPAS YET SO THE CODE CHUNK IS TURNED OFF IN THE MARKDOWN CODE.
